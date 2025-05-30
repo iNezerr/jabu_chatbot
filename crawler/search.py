@@ -6,6 +6,7 @@ import django
 from django.db.models import Q
 import re
 from collections import Counter
+from asgiref.sync import sync_to_async
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'academic_chatbot.settings')
 django.setup()
@@ -34,9 +35,9 @@ def preprocess_query(query):
     
     return words
 
-def search_knowledge_base(query, limit=10):
+async def search_knowledge_base(query, limit=10):
     """
-    Search the knowledge base for relevant information
+    Search the knowledge base for relevant information (async-compatible)
     
     Args:
         query (str): User's search query
@@ -51,44 +52,50 @@ def search_knowledge_base(query, limit=10):
     if not keywords:
         return []
     
-    # Build the query filters
-    filter_conditions = Q()
-    
-    # Search in title, content and tags
-    for keyword in keywords:
-        filter_conditions |= Q(title__icontains=keyword) 
-        filter_conditions |= Q(content__icontains=keyword)
-        filter_conditions |= Q(tags__contains=[keyword])
-    
-    # Get matching entries
-    results = KnowledgeBase.objects.filter(filter_conditions).distinct()
-    
-    # Score and rank results
-    scored_results = []
-    for entry in results:
-        score = 0
+    # Define sync function to handle database operations
+    @sync_to_async
+    def fetch_matching_entries(keywords):
+        # Build the query filters
+        filter_conditions = Q()
         
-        # Count keyword occurrences
+        # Search in title, content and tags
         for keyword in keywords:
-            # Title match (higher weight)
-            if keyword in entry.title.lower():
-                score += 10
-                
-            # Tag match (high weight)
-            if any(keyword in tag.lower() for tag in entry.tags):
-                score += 5
-                
-            # Content match
-            content_matches = len(re.findall(r'\b' + keyword + r'\b', entry.content.lower()))
-            score += content_matches
+            filter_conditions |= Q(title__icontains=keyword) 
+            filter_conditions |= Q(content__icontains=keyword)
+            filter_conditions |= Q(tags__contains=[keyword])
         
-        scored_results.append((entry, score))
+        # Get matching entries and convert to list
+        results = list(KnowledgeBase.objects.filter(filter_conditions).distinct())
+        
+        # Score and rank results
+        scored_results = []
+        for entry in results:
+            score = 0
+            
+            # Count keyword occurrences
+            for keyword in keywords:
+                # Title match (higher weight)
+                if keyword in entry.title.lower():
+                    score += 10
+                    
+                # Tag match (high weight)
+                if any(keyword in tag.lower() for tag in entry.tags):
+                    score += 5
+                    
+                # Content match
+                content_matches = len(re.findall(r'\b' + keyword + r'\b', entry.content.lower()))
+                score += content_matches
+            
+            scored_results.append((entry, score))
+        
+        # Sort by score (descending) and take top results
+        scored_results.sort(key=lambda x: x[1], reverse=True)
+        
+        # Return the top N results
+        return [(entry, score) for entry, score in scored_results[:limit]]
     
-    # Sort by score (descending) and take top results
-    scored_results.sort(key=lambda x: x[1], reverse=True)
-    
-    # Return the top N results
-    return [(entry, score) for entry, score in scored_results[:limit]]
+    # Execute the sync function asynchronously
+    return await fetch_matching_entries(keywords)
 
 def get_relevant_content(query):
     """

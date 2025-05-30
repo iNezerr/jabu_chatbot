@@ -44,8 +44,53 @@ def scrape_webpage(url):
             # Extract title
             title = soup.title.string if soup.title else "Untitled Page"
             
-            # Extract main content (this can be customized based on website's structure)
-            content_elements = soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'li'])
+            # Extract main content by targeting specific container elements
+            # First try to find common main content container IDs
+            main_content = None
+            
+            # Try common content container IDs and classes
+            content_selectors = [
+                'div#main-content', 'div.main-content', 
+                'div#content', 'div.content', 
+                'main', 'article', 
+                'div.post-content', 'div.entry-content'
+            ]
+            
+            # Try each selector until we find content
+            for selector in content_selectors:
+                content_container = soup.select_one(selector)
+                if content_container and content_container.get_text().strip():
+                    main_content = content_container
+                    break
+            
+            # If we found a main content container, extract text from it
+            if main_content:
+                content_elements = main_content.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'li'])
+            else:
+                # Otherwise, extract content from after the header if exists
+                header = soup.find('header')
+                if header:
+                    content_elements = []
+                    for elem in header.find_next_siblings():
+                        if elem.name == 'footer':
+                            break
+                        content_elements.extend(elem.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'li']))
+                else:
+                    # Fallback to extracting from the body but skip headers and footers
+                    body = soup.find('body')
+                    if body:
+                        # Skip headers and footers
+                        content_elements = []
+                        for elem in body.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'li']):
+                            # Check if element is inside a header or footer
+                            parent_tags = [p.name for p in elem.parents]
+                            if 'header' not in parent_tags and 'footer' not in parent_tags and 'nav' not in parent_tags:
+                                content_elements.append(elem)
+                    else:
+                        # Last resort - get all content elements from page
+                        content_elements = soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'li'])
+            
+            # Join the text content of elements
             content = ' '.join([element.get_text().strip() for element in content_elements])
             
             # Generate tags using NLP

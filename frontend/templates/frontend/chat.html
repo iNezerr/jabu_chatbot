@@ -20,12 +20,15 @@
                 </div>
             </div>
             
-            <div class="input-group">
-                <input type="text" id="messageInput" class="form-control" placeholder="Type your message here...">
-                <button class="btn btn-primary" type="button" id="sendButton">
-                    <i class="bi bi-send"></i> Send
-                </button>
-            </div>
+            <form id="chatForm">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" id="messageInput" class="form-control" placeholder="Type your message here...">
+                    <button class="btn btn-primary" type="button" id="sendButton">
+                        <i class="bi bi-send"></i> Send
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -123,8 +126,14 @@
         try {
             addLoadingIndicator();
             
-            // Get the CSRF token
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            // Get the CSRF token with a fallback
+            let csrftoken = '';
+            const csrfElement = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfElement) {
+                csrftoken = csrfElement.value;
+            } else {
+                console.warn('CSRF token not found, API call may fail');
+            }
             
             // Send the message to the server
             const response = await fetch('/api/chat/', {

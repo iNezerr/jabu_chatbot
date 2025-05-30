@@ -1,17 +1,17 @@
 from django.shortcuts import render
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import ChatMessageSerializer, ChatResponseSerializer, FeedbackSerializer
-from .services import ChatService
+from .services_simple import ChatService  # Use the simplified service
 from .models import ChatLog, Feedback
 from users.models import StudentProfile
-import asyncio
 
 # Create your views here.
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-async def chat_message(request):
+def chat_message(request):
     """
     Chat endpoint for students to interact with the AI assistant
     
@@ -36,16 +36,39 @@ async def chat_message(request):
     # Create chat service
     chat_service = ChatService()
     
-    # Generate response (using await since this is an async view)
-    response_data = await chat_service.generate_response(
-        message, student_id, conversation_id
-    )
-    
-    # Return response
-    return Response({
-        'status': 'success',
-        'data': response_data
-    }, status=200)
+    # Call the service to generate a response - now fully synchronous
+    try:
+        response_data = chat_service.generate_response(
+            message, student_id, conversation_id
+        )
+        
+        # Return response
+        return Response({
+            'status': 'success',
+            'data': response_data
+        }, status=200)
+    except Exception as e:
+        import traceback
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in chat_message view: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        # Determine if this is a known error with a user-friendly message
+        error_message = str(e)
+        if "connection" in error_message.lower() or "timeout" in error_message.lower():
+            user_message = "Unable to connect to the AI service. Please try again later."
+        elif "api key" in error_message.lower() or "authentication" in error_message.lower():
+            user_message = "Authentication error with the AI service. Please contact support."
+        else:
+            user_message = "An unexpected error occurred. Please try again later."
+            
+        return Response({
+            'status': 'error',
+            'message': user_message,
+            'technical_details': error_message if settings.DEBUG else None
+        }, status=500)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
