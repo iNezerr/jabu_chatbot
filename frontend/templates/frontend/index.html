@@ -1,0 +1,25 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Welcome - JABU Academic Chatbot{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4">Welcome to JABU Academic Chatbot</h1>
+            <p class="lead mt-4">
+                Your AI-powered assistant for all academic inquiries at Joseph Ayo Babalola University
+            </p>
+            <div class="mt-5">
+                <img src="https://placehold.co/600x300?text=JABU+Chatbot" alt="JABU Chatbot" class="img-fluid rounded shadow">
+            </div>
+            <div class="mt-5">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4">Login</a>
+                <p class="mt-3">
+                    <small>Sign in to access your personalized academic assistant</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,259 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Profile - JABU Academic Chatbot{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Your Profile</h1>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    User Information
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="bi bi-person-circle" style="font-size: 5rem;"></i>
+                    </div>
+                    <h5 class="card-title" id="profileName">Loading...</h5>
+                    <p class="card-text" id="profileEmail">Loading...</p>
+                    <p class="text-muted"><small id="profileJoined">Loading...</small></p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    Academic Information
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Program:</dt>
+                        <dd class="col-sm-7" id="profileProgram">Loading...</dd>
+                        
+                        <dt class="col-sm-5">Year of Study:</dt>
+                        <dd class="col-sm-7" id="profileYear">Loading...</dd>
+                        
+                        <dt class="col-sm-5">Student ID:</dt>
+                        <dd class="col-sm-7" id="profileStudentId">Loading...</dd>
+                        
+                        <dt class="col-sm-5">GPA:</dt>
+                        <dd class="col-sm-7" id="profileGpa">Loading...</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    Update Profile
+                </div>
+                <div class="card-body">
+                    <form id="profileForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="program" class="form-label">Program</label>
+                            <input type="text" class="form-control" id="program" name="program" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="year_of_study" class="form-label">Year of Study</label>
+                                <input type="number" class="form-control" id="year_of_study" name="year_of_study" min="1" max="7" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="gpa" class="form-label">GPA (Optional)</label>
+                                <input type="number" class="form-control" id="gpa" name="gpa" step="0.01" min="0" max="4.0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="student_id" class="form-label">Student ID</label>
+                            <input type="text" class="form-control" id="student_id" name="student_id" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Bio (Optional)</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3"></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="saveButton">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // DOM elements
+    const profileForm = document.getElementById('profileForm');
+    const saveButton = document.getElementById('saveButton');
+    
+    // Profile data elements
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const profileProgram = document.getElementById('profileProgram');
+    const profileYear = document.getElementById('profileYear');
+    const profileStudentId = document.getElementById('profileStudentId');
+    const profileGpa = document.getElementById('profileGpa');
+    const profileJoined = document.getElementById('profileJoined');
+    
+    // Form fields
+    const nameField = document.getElementById('name');
+    const emailField = document.getElementById('email');
+    const programField = document.getElementById('program');
+    const yearField = document.getElementById('year_of_study');
+    const gpaField = document.getElementById('gpa');
+    const studentIdField = document.getElementById('student_id');
+    const bioField = document.getElementById('bio');
+    
+    // Format date
+    function formatDate(dateString) {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
+    }
+    
+    // Load profile data
+    async function loadProfileData() {
+        try {
+            const response = await fetch('/api/my-profile/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const profile = data.data;
+                
+                // Update display elements
+                profileName.textContent = profile.name;
+                profileEmail.textContent = profile.email;
+                profileProgram.textContent = profile.program;
+                profileYear.textContent = profile.year_of_study;
+                profileStudentId.textContent = profile.student_id;
+                profileGpa.textContent = profile.gpa || 'Not provided';
+                profileJoined.textContent = `Joined: ${formatDate(profile.date_joined)}`;
+                
+                // Fill form fields
+                nameField.value = profile.name;
+                emailField.value = profile.email;
+                programField.value = profile.program;
+                yearField.value = profile.year_of_study;
+                gpaField.value = profile.gpa || '';
+                studentIdField.value = profile.student_id;
+                bioField.value = profile.bio || '';
+                
+            } else {
+                showError('Failed to load profile. Please try again later.');
+                console.error('Error:', data.message || 'Unknown error');
+            }
+        } catch (error) {
+            showError('Failed to load profile. Please try again later.');
+            console.error('Error:', error);
+        }
+    }
+    
+    // Update profile
+    async function updateProfile(formData) {
+        try {
+            saveButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            saveButton.disabled = true;
+            
+            // Get the CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch('/api/my-profile/update/', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Show success message
+                showSuccess('Profile updated successfully!');
+                
+                // Reload profile data
+                loadProfileData();
+            } else {
+                showError('Failed to update profile. Please check your inputs and try again.');
+                console.error('Error:', data.errors || data.message || 'Unknown error');
+            }
+        } catch (error) {
+            showError('Failed to update profile. Please try again later.');
+            console.error('Error:', error);
+        } finally {
+            saveButton.innerHTML = '<i class="bi bi-save"></i> Save Changes';
+            saveButton.disabled = false;
+        }
+    }
+    
+    // Show error message
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+        errorDiv.role = 'alert';
+        errorDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        profileForm.parentElement.insertBefore(errorDiv, profileForm);
+    }
+    
+    // Show success message
+    function showSuccess(message) {
+        const successDiv = document.createElement('div');
+        successDiv.className = 'alert alert-success alert-dismissible fade show mt-3';
+        successDiv.role = 'alert';
+        successDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        profileForm.parentElement.insertBefore(successDiv, profileForm);
+    }
+    
+    // Event listeners
+    profileForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Collect form data
+        const formData = {
+            name: nameField.value.trim(),
+            email: emailField.value.trim(),
+            program: programField.value.trim(),
+            year_of_study: parseInt(yearField.value, 10),
+            student_id: studentIdField.value.trim(),
+            bio: bioField.value.trim()
+        };
+        
+        // Add GPA if provided
+        if (gpaField.value.trim()) {
+            formData.gpa = parseFloat(gpaField.value);
+        }
+        
+        // Update profile
+        updateProfile(formData);
+    });
+    
+    // Load profile data on page load
+    document.addEventListener('DOMContentLoaded', loadProfileData);
+</script>
+{% endblock %}

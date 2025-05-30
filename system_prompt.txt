@@ -1,0 +1,87 @@
+---
+applyTo: '**'
+---
+Coding standards, domain knowledge, and preferences that AI should follow.
+We're building an SIMPLE **AI-powered academic counseling chatbot** for Joseph Ayo Babalola University (JABU). It will provide 24/7 personalized academic advice using an AI model + real-time data from school websites.
+
+---
+
+### ✅ Your Role:
+
+Build a backend that:
+
+* Integrates with Groq-hosted AI models (e.g. Mixtral)
+* Retrieves and stores academic data from school websites
+* Prioritizes **database content first** before crawling online
+* Provides REST & WebSocket APIs
+* Deploys to Vercel
+* Uses NeonDB PostgreSQL as its primary DB
+
+---
+
+### 💻 **Tech Stack (Strict Spec)**
+
+#### ▶ Backend
+
+* Django
+* Django REST Framework
+* Django Channels for WebSocket
+
+#### ▶ AI/NLP
+
+* Groq Cloud (Mixtral model)
+* Use pre-built prompt templates for context injection
+
+#### ▶ Database
+
+* PostgreSQL hosted on NeonDB
+* Tables for:
+
+  * `StudentProfile`
+  * `ChatLog`
+  * `Feedback`
+  * `KnowledgeBase` (holds all crawled academic data)
+
+#### ▶ Caching + Queue
+
+* Redis + Celery for async AI calls & background crawling
+
+#### ▶ Scraping Logic
+
+* Scrape with `httpx` + `BeautifulSoup4`
+* Store all scraped content in `KnowledgeBase`
+* Only crawl if DB lookup fails (fallback)
+* Implement keyword tagging for easier search/filtering
+
+#### ▶ Deployment
+
+* Vercel using `vercel-django` or serverless wrapper
+* Optimize for serverless cold starts and async tasks
+
+---
+
+### 📌 Workflow Summary
+
+1. **On Question**
+
+   * Search `KnowledgeBase` first using keyword matching
+   * If not found: trigger crawl task → store result → reattempt response
+
+2. **On Scheduled Task**
+
+   * Auto-refresh known academic pages periodically (nightly or weekly)
+   * Update DB only if content has changed (hash-check)
+
+3. **Admin Features**
+
+   * CRUD interface for managing stored `KnowledgeBase`
+   * Dashboard for failed lookups, fallback counts, scrape stats
+
+---
+
+### 🎯 Success Criteria
+
+* Crawled content is reused before hitting the web
+* Students get answers within **2s**
+* Fully deployed on **Vercel**, DB on **NeonDB**, AI on **Groq**
+* Logs and fallback counts tracked for monitoring system performance

@@ -1,0 +1,81 @@
+{% extends 'frontend/base.html' %}
+
+{% block title %}Dashboard - JABU Academic Chatbot{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Dashboard</h1>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-dots text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Chat Assistant</h5>
+                    <p class="card-text">Ask questions about academics, admissions, programs, and more.</p>
+                    <a href="{% url 'chat' %}" class="btn btn-primary">Start Chatting</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle text-success" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Your Profile</h5>
+                    <p class="card-text">View and update your student profile information.</p>
+                    <a href="{% url 'profile' %}" class="btn btn-success">Manage Profile</a>
+                </div>
+            </div>
+        </div>
+        
+        {% if user.is_staff %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-robot text-danger" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Crawler Management</h5>
+                    <p class="card-text">Manage web crawling and the knowledge base.</p>
+                    <a href="{% url 'crawler' %}" class="btn btn-danger">Access Crawler</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Quick Info
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Welcome, {{ user.username }}!</h5>
+                    <p class="card-text">Use the JABU Academic Chatbot to get instant answers to your questions about the university.</p>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Ask about admission requirements</li>
+                        <li class="list-group-item">Get information about courses and programs</li>
+                        <li class="list-group-item">Learn about campus facilities</li>
+                        <li class="list-group-item">Find out about academic calendar and events</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Latest Updates
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>New!</strong> The chatbot has been updated with the latest academic information.
+                    </div>
+                    <p class="card-text">Our knowledge base is continuously updated to provide you with the most accurate information.</p>
+                    <p class="card-text"><small class="text-muted">Last updated: May 28, 2025</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

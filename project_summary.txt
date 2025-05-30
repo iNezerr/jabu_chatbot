@@ -1,0 +1,157 @@
+# JABU Chatbot Project Summary
+
+## Project Overview
+The JABU Chatbot is an AI-powered academic assistant developed for Joseph Ayo Babalola University (JABU) to help students get information about the university, its programs, admissions, and other academic matters. The system uses a knowledge base populated by web crawlers to provide accurate and contextual responses to student inquiries.
+
+## Technology Stack
+- **Backend**: Django (Python) with Django REST Framework
+- **Database**: PostgreSQL (using Django ORM)
+- **AI/ML**: Groq API (LLM integration)
+- **Web Scraping**: httpx and BeautifulSoup4
+- **Authentication**: JWT (JSON Web Tokens) via SimpleJWT
+- **Documentation**: drf-spectacular for OpenAPI/Swagger docs
+
+## Project Structure
+The project is organized into several Django apps:
+
+### 1. academic_chatbot (Core Project)
+- Main project configuration
+- URLs routing
+- Settings management
+
+### 2. users
+- Student profile management
+- User authentication and authorization
+- Profile creation, retrieval, and updates
+
+### 3. chat
+- Chat interaction handling
+- Integration with AI models (Groq)
+- Message processing, response generation
+- Feedback collection
+
+### 4. crawler
+- Web scraping and content extraction
+- Knowledge base population
+- Search functionality
+- Content indexing and relevance scoring
+
+### 5. core
+- Base models and utilities
+
+## Key Features Implemented
+
+### User Management
+- Student profile creation and management
+- Authentication using JWT
+- Profile updates and retrieval
+
+### Chat Functionality
+- AI-powered responses using Groq's LLM API
+- Context injection from knowledge base
+- Conversation tracking and history
+- Fallback mechanisms for handling unknown queries
+- Student information inclusion for personalized responses
+
+### Knowledge Management
+- Web crawling of university resources
+- Automatic extraction of relevant content
+- Keyword tagging for improved searchability
+- Search functionality with relevance scoring
+- Cache and fallback mechanisms
+
+### Administration
+- Admin panels for managing knowledge base
+- Crawler control and scheduling
+- Feedback monitoring
+
+## API Endpoints
+
+### Authentication
+- `POST /api/token/` - Obtain JWT token
+- `POST /api/token/refresh/` - Refresh JWT token
+
+### Users
+- `GET /api/my-profile/` - Get authenticated user's profile
+- `PUT /api/my-profile/update/` - Update user's profile
+- `POST /api/profiles/` - Create a new profile (Admin only)
+- `GET /api/profiles/` - List all profiles (Admin only)
+- `GET /api/profiles/{id}/` - Get specific profile (Admin only)
+
+### Chat
+- `POST /api/chat/` - Send message and get AI response
+- `POST /api/feedback/` - Submit feedback for a chat session
+
+### Crawler
+- `POST /api/refresh-knowledgebase/` - Trigger crawling (Admin only)
+- `GET /api/search/` - Search the knowledge base
+
+### Documentation
+- `GET /api/schema/` - OpenAPI schema
+- `GET /api/docs/` - Swagger UI documentation
+
+## Database Models
+
+### StudentProfile
+- User (OneToOne to Django User)
+- Name, Email, Program
+- Year of study, GPA
+- Student ID, Bio
+- Date joined, Last updated
+
+### ChatLog
+- Student (ForeignKey to StudentProfile)
+- User message
+- AI response
+- Timestamp
+- Conversation ID
+
+### Feedback
+- Chat log (ForeignKey to ChatLog)
+- Rating (1-5 scale)
+- Comment
+- Submission timestamp
+
+### KnowledgeBase
+- Title
+- Content
+- Tags (array)
+- Source URL
+- Created/Updated timestamps
+- Verification flag
+
+## Background Processing
+- Batch crawling of configured URLs
+- Knowledge base refreshing
+- Web content extraction and processing
+
+## Utilities
+- Search functionality with relevance scoring
+- Web page scraping with BeautifulSoup
+- Keyword extraction from content
+- Error handling and logging
+
+## Testing Tools
+- Test scripts for chat functionality
+- Test scripts for crawler functionality
+- API testing utilities
+
+## Development Process
+- Django project setup with app structure
+- Database models and migrations
+- REST API implementation
+- Web crawler development
+- AI service integration
+- Authentication and authorization
+- Testing and debugging
+- Documentation
+
+## Future Enhancements (Potential)
+- Real-time chat using WebSockets
+- Enhanced analytics on student questions
+- Voice interface integration
+- Mobile app companion
+- Integration with university LMS
+- Automated knowledge base updating
+- More advanced relevance scoring algorithms
+- Multi-language support
