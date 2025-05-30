@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import ChatMessageSerializer, ChatResponseSerializer, FeedbackSerializer
-from .services_simple import ChatService  # Use the simplified service
+from .services import ChatService  # Use the simplified service
 from .models import ChatLog, Feedback
 from users.models import StudentProfile
 
@@ -17,10 +17,22 @@ def chat_message(request):
     
     POST Data:
         - message: Student's message or question (required)
-        - student_id: Student's ID (optional)
+        - student_id: Student's ID (required) - ID of the authenticated student
         - conversation_id: Conversation ID for continuing conversations (optional)
     """
-    serializer = ChatMessageSerializer(data=request.data)
+    # Get student_id from the authenticated user if not provided
+    data = request.data.copy()
+    if not data.get('student_id'):
+        try:
+            student_profile = StudentProfile.objects.get(user=request.user)
+            data['student_id'] = student_profile.student_id
+        except StudentProfile.DoesNotExist:
+            return Response({
+                'status': 'error',
+                'message': 'Student profile not found for authenticated user'
+            }, status=400)
+    
+    serializer = ChatMessageSerializer(data=data)
     
     if not serializer.is_valid():
         return Response({
@@ -30,7 +42,7 @@ def chat_message(request):
     
     # Extract data from request
     message = serializer.validated_data['message']
-    student_id = serializer.validated_data.get('student_id')
+    student_id = serializer.validated_data['student_id']  # Now required
     conversation_id = serializer.validated_data.get('conversation_id')
     
     # Create chat service
@@ -69,6 +81,43 @@ def chat_message(request):
             'message': user_message,
             'technical_details': error_message if settings.DEBUG else None
         }, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_chat_history(request):
+    """
+    Retrieve chat history for a specific conversation
+    
+    GET Parameters:
+        - conversation_id: ID of the conversation to retrieve
+    """
+    conversation_id = request.GET.get('conversation_id')
+    
+    if not conversation_id:
+        return Response({
+            'status': 'error',
+            'message': 'conversation_id is required'
+        }, status=400)
+    
+    # Get chat logs for this conversation
+    chat_logs = ChatLog.objects.filter(conversation_id=conversation_id).order_by('timestamp')
+    
+    # Format the chat history
+    history = []
+    for log in chat_logs:
+        history.append({
+            'user_message': log.user_message,
+            'ai_response': log.ai_response,
+            'timestamp': log.timestamp.isoformat()
+        })
+    
+    return Response({
+        'status': 'success',
+        'data': {
+            'conversation_id': conversation_id,
+            'history': history
+        }
+    }, status=200)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

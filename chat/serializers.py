@@ -4,7 +4,7 @@ from users.models import StudentProfile
 
 class ChatMessageSerializer(serializers.Serializer):
     message = serializers.CharField(required=True)
-    student_id = serializers.CharField(required=False, allow_null=True)
+    student_id = serializers.CharField(required=True)
     conversation_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
 class ChatResponseSerializer(serializers.Serializer):
